@@ -9,5 +9,5 @@ import {
 // Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [syncUserCreation, syncUserDeletion, yncUserUpdation],
+  functions: [syncUserCreation, syncUserDeletion, syncUserUpdation],
 });
