@@ -14,6 +14,7 @@ export const syncUserCreation = inngest.createFunction(
         email: data.email_addresses[0].email_address,
         name: `${data.first_name} ${data.last_name}`,
         image: data.image_url,
+        role: "user",
       },
     });
   }
@@ -32,6 +33,7 @@ export const syncUserUpdation = inngest.createFunction(
         email: data.email_addresses[0].email_address,
         name: `${data.first_name} ${data.last_name}`,
         image: data.image_url,
+        role: data.public_metadata.role || "user",
       },
     });
   }
@@ -45,7 +47,25 @@ export const syncUserDeletion = inngest.createFunction(
   async ({ event }) => {
     const { data } = event;
     await prisma.user.delete({
-      where: { id: data.id }, 
+      where: { id: data.id },
+    });
+  }
+);
+
+// inngest function to ndelete coupon on expiry
+
+export const deleteCouponOnExpiry = inngest.createFunction(
+  { id: "delete-coupon-on-ecpiry" },
+  { event: "app/coupon.expired" },
+  async ({ event, step }) => {
+    const { data } = event;
+    const expiryDate = new Date(data.expires_at);
+    await step.sleepUntil("wait-for-expiry", expiryDate);
+
+    await step.run("delete-coupon-from-database", async () => {
+      await prisma.coupon.delete({
+        where: { code: data.code },
+      });
     });
   }
 );
